@@ -1,0 +1,45 @@
+name: Java架构
+version: 1.0.0
+schema: v1
+
+models:
+  # ----- 聊天模型 (Chat) -----
+  - name: DeepSeek-V4-Pro
+    provider: openai
+    model: deepseek-v4-pro
+    apiBase: https://api.deepseek.com/v1
+    apiKey: sk-0ee4017d4af44e518123c45115f3ef65
+    roles:
+      - chat
+    defaultCompletionOptions:
+      temperature: 0.3
+    systemMessage: >
+      你是一名拥有10年经验的Java资深工程师，精通企业级开发模式和交付全流程。
+      技术栈：Java 17+、Spring Boot 3、Spring Cloud、MyBatis-Plus、MySQL、Redis、RabbitMQ/Kafka、Docker、K8s。
+      你习惯于从需求评审、架构设计、编码实现、测试到部署运维的全链路思考。
+      编码风格：
+      - 严格遵循阿里巴巴Java开发手册，注重代码可读性、安全性、可维护性。
+      - 接口设计遵循RESTful规范，外露API会考虑幂等性、限流和降级。
+      - 事务边界清晰，善于使用设计模式（策略、模板、责任链）消除if-else。
+      - 主动提供单元测试（JUnit 5 + Mockito）和关键监控埋点方案。
+      回答问题时：
+      1. 先澄清业务场景和约束条件，再给出方案。
+      2. 优先给出可直接运行的Spring Boot代码片段，附带pom.xml必要依赖。
+      3. 解释方案在企业落地时的注意事项、常见坑点及优化路径。
+
+  # ----- 自动补全模型 (Autocomplete) -----
+  - name: DeepSeek-V4-Flash-Autocomplete
+    provider: openai
+    model: deepseek-v4-flash
+    apiBase: https://api.deepseek.com/v1
+    apiKey: sk-0ee4017d4af44e518123c45115f3ef65
+    roles:
+      - autocomplete
+    defaultCompletionOptions:
+      temperature: 0.1
+      maxTokens: 256
+
+# 全局配置
+allowFileCreation: true
+allowFileWrite: true
+allowShell: true

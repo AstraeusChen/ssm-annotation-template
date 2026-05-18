@@ -1,0 +1,75 @@
+name: Local Assistant
+version: 1.0.0
+schema: v1
+
+# 开启实验性工具支持，让 Agent 模式拥有更强的能力
+experimental:
+  useSystemMessageTools: true
+
+models:
+  # ==================== 1. 推理大师：开启思考，适合复杂任务 ====================
+  - name: DeepSeek-推理大师
+    provider: deepseek
+    model: deepseek-v4-pro
+    apiKey: sk-0ee4017d4af44e518123c45115f3ef65
+    apiBase: https://api.deepseek.com/beta
+    baseSystemMessage: "你是一位拥有10年经验的资深全栈工程师，精通Java、SSM、SpringBoot及前端React/Vue。"
+    roles:
+      - chat
+      - edit
+      - apply
+      - summarize
+    contextLength: 128000
+    defaultCompletionOptions:
+      temperature: 0.3
+      # 开启思考模式，强度设为 high
+      extraBody:
+        thinking:
+          type: "enabled"
+        reasoning_effort: "high"
+
+  # ==================== 2. 极速先锋：关闭思考，适合高频简单任务 ====================
+  - name: DeepSeek-极速先锋
+    provider: deepseek
+    model: deepseek-v4-pro
+    apiKey: sk-0ee4017d4af44e518123c45115f3ef65
+    apiBase: https://api.deepseek.com/beta
+    baseSystemMessage: "你是一位拥有10年经验的资深全栈工程师，精通Java、SSM、SpringBoot及前端React/Vue。"
+    roles:
+      - chat
+      - edit
+      - apply
+      - summarize
+    contextLength: 128000
+    defaultCompletionOptions:
+      temperature: 0.3
+      # 显式关闭思考，响应更快，成本更省
+      extraBody:
+        thinking:
+          type: "disabled"
+
+  # ==================== 3. 代码补全：快速补全，关闭思考 ====================
+  - name: DeepSeek-补全
+    provider: deepseek
+    model: deepseek-v4-flash
+    apiKey: sk-0ee4017d4af44e518123c45115f3ef65
+    apiBase: hhttps://api.deepseek.com/beta
+    roles:
+      - autocomplete
+    contextLength: 128000
+    defaultCompletionOptions:
+      temperature: 0.1
+      maxTokens: 256
+      extraBody:
+        thinking:
+          type: "disabled"
+
+# 上下文提供者（如示例所示，可根据需要调整）
+context:
+  - provider: code
+  - provider: docs
+  - provider: diff
+  - provider: terminal
+  - provider: problems
+  - provider: folder
+  - provider: codebase

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSM 全注解模板 - 首页</title>
+    <style>
+        :root {
+            --primary: #764ba2;
+            --primary-light: #667eea;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --text-light: #fff;
+            --text-dark: #333;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --easing: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-light);
+            overflow-x: hidden;
+            background: var(--primary-light);
+            position: relative;
+        }
+
+        /* 动态背景层 */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        }
+
+        .bg-gradient::before,
+        .bg-gradient::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+            animation: floatBlob 20s infinite alternate ease-in-out;
+        }
+
+        .bg-gradient::before {
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.2);
+            top: -200px;
+            left: -200px;
+            animation-duration: 25s;
+        }
+
+        .bg-gradient::after {
+            width: 500px;
+            height: 500px;
+            background: rgba(118, 75, 162, 0.3);
+            bottom: -150px;
+            right: -150px;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        @keyframes floatBlob {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(50px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
+            100% {
+                transform: translate(20px, -20px) scale(1.05);
+            }
+        }
+
+        /* 加载进度条 */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .loader::after {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #fff, #ffd700, #fff);
+            animation: load 1.8s var(--easing) forwards;
+        }
+
+        @keyframes load {
+            to { width: 100%; }
+        }
+
+        /* 导航栏 - 玻璃拟态 */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s var(--easing);
+        }
+
+        nav.scrolled {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(30px);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: logoPulse 3s infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            position: relative;
+            padding: 8px 0;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s var(--easing);
+            border-radius: 2px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* 主内容区域 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Canvas 粒子背景 */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 英雄区域 */
+        .hero {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            animation: fadeInUp 0.8s ease, glowText 2s infinite alternate;
+            letter-spacing: 2px;
+        }
+
+        @keyframes glowText {
+            from { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 30px rgba(102, 126, 234, 0.3); }
+            to { text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 50px rgba(102, 126, 234, 0.6); }
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 600px;
+            margin: 0 auto 35px;
+            animation: fadeInUp 1s ease;
+            line-height: 1.6;
+        }
+
+        /* 主按钮 */
+        .hero button {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 60px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s var(--easing);
+            animation: fadeInUp 1.2s ease;
+            isolation: isolate;
+        }
+
+        .hero button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: rotate(45deg) translate(-100%, -100%);
+            transition: transform 0.6s;
+        }
+
+        .hero button:hover::before {
+            transform: rotate(45deg) translate(100%, 100%);
+        }
+
+        .hero button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(118, 75, 162, 0.4);
+            background: #f8f8f8;
+        }
+
+        .hero button:active {
+            transform: translateY(-2px);
+        }
+
+        /* 涟漪效果 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(118, 75, 162, 0.3);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+        }
+
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* 按钮外围脉冲 */
+        .hero button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 60px;
+            background: transparent;
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        /* 卡片区域 */
+        .card-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 35px 30px;
+            width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.4s var(--easing);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: transform 0.5s;
+        }
+
+        .card:hover::before {
+            transform: translate(-30px, 30px) scale(1.3);
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 25px 60px rgba(102, 126, 234, 0.25);
+            border-color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-icon {
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            transition: transform 0.6s var(--easing), filter 0.3s;
+        }
+
+        .card:hover .card-icon {
+            transform: rotateY(360deg) scale(1.2);
+            filter: drop-shadow(0 6px 12px rgba(118, 75, 162, 0.3));
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .card p {
+            color: #555;
+            line-height: 1.7;
+        }
+
+        /* 页脚 */
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 18px;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 2;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 鼠标跟随光点 */
+        .cursor-glow {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* 动画关键帧 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+            }
+            .nav-links { gap: 20px; }
+            .hero h1 { font-size: 2.8rem; }
+            .hero p { font-size: 1.2rem; }
+            .card-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .card { width: 90%; max-width: 340px; }
+        }
+    </style>
+</head>
+<body>
+<!-- 动态背景层 -->
+<div class="bg-gradient"></div>
+
+<!-- 进度条 -->
+<div class="loader"></div>
+
+<!-- Canvas 粒子 -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- 鼠标跟随光点 -->
+
+
+<!-- 导航栏 -->
+<nav id="navbar">
+    <div class="logo">
+        <span>🚀</span> SSM Template
+    </div>
+    <div class="nav-links">
+        <a href="#">首页</a>
+        <a href="#">用户管理</a>
+        <a href="#">关于</a>
+        <a href="#">联系</a>
+    </div>
+</nav>
+
+<!-- 主要内容 -->
+<main>
+    <section class="hero">
+        <h1>欢迎回来，晨风！</h1>
+        <p>基于 SSM 全注解的前后端分离模板，快速构建你的 Java Web 应用。</p>
+        <button id="heroBtn" onclick="window.location.href='index.html'">进入用户管理</button>
+    </section>
+
+    <section class="card-container">
+        <div class="card">
+            <div class="card-icon">⚡</div>
+            <h3>全注解驱动</h3>
+            <p>零 XML 配置，Spring + MyBatis 纯注解开发，简洁高效。</p>
+        </div>
+        <div class="card">
+            <div class="card-icon">📄</div>
+            <h3>前后端分离</h3>
+            <p>前端纯 HTML + Axios，后端 RESTful API，独立部署。</p>
+        </div>
+        <div class="card">
+            <div class="card-icon">🛡️</div>
+            <h3>安全可靠</h3>
+            <p>集成参数校验、全局异常处理，保障数据安全。</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>© 2025 SSM Annotation Template | 设计 by you</p>
+</footer>
+
+<script>
+    // 移除进度条
+    window.addEventListener('load', () => {
+        const loader = document.querySelector('.loader');
+        if (loader) {
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }, 600);
+        }
+    });
+
+    // 导航栏滚动效果
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // 按钮涟漪
+    document.addEventListener('click', function(e) {
+        const target = e.target;
+        if (target.tagName === 'BUTTON' || target.closest('button')) {
+            const btn = target.tagName === 'BUTTON' ? target : target.closest('button');
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+            ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
+    });
+
+    // --- 鼠标拖尾粒子（替换原来的光标跟随光点） ---
+    let mouseX = -100, mouseY = -100;  // 鼠标位置
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    // 增强粒子背景（含鼠标拖尾粒子）
+    (function() {
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const colors = ['#ffffff', '#ffd700', '#a0c4ff', '#fdffb6'];
+        const maxBgParticles = 50;        // 背景自由粒子
+        const trailSpawnRate = 2;         // 每帧生成拖尾粒子数
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 背景粒子（与之前相同）
+        class BgParticle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2.5 + 1;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.opacity = Math.random() * 0.5 + 0.3;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // 鼠标拖尾粒子（短暂存在，逐渐缩小并消失）
+        class TrailParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.radius = Math.random() * 3 + 2;
+                this.life = 1.0;          // 1 = 不透明, 0 = 消失
+                this.decay = 0.02 + Math.random() * 0.03;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+                this.radius *= 0.99;      // 慢慢缩小
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life * 0.7;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+
+        // 初始化背景粒子
+        function initBg() {
+            particles = [];
+            for (let i = 0; i < maxBgParticles; i++) {
+                particles.push(new BgParticle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 生成鼠标拖尾粒子（如果鼠标在窗口内）
+            if (mouseX >= 0 && mouseY >= 0) {
+                for (let i = 0; i < trailSpawnRate; i++) {
+                    particles.push(new TrailParticle(mouseX, mouseY));
+                }
+            }
+
+            // 更新与绘制所有粒子，移除死掉的拖尾粒子
+            particles = particles.filter(p => {
+                if (p instanceof TrailParticle && p.isDead()) return false;
+                p.update();
+                p.draw();
+                return true;
+            });
+
+            // 补足背景粒子（防止数量减少）
+            while (particles.filter(p => p instanceof BgParticle).length < maxBgParticles) {
+                particles.push(new BgParticle());
+            }
+
+            // 连线（仅背景粒子之间）
+            const bgParts = particles.filter(p => p instanceof BgParticle);
+            const maxDist = 130;
+            for (let i = 0; i < bgParts.length; i++) {
+                for (let j = i + 1; j < bgParts.length; j++) {
+                    const dx = bgParts[i].x - bgParts[j].x;
+                    const dy = bgParts[i].y - bgParts[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < maxDist) {
+                        ctx.beginPath();
+                        ctx.moveTo(bgParts[i].x, bgParts[i].y);
+                        ctx.lineTo(bgParts[j].x, bgParts[j].y);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.12 * (1 - dist / maxDist)})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        initBg();
+        animate();
+    })();
+</script>
+</body>
+</html>
